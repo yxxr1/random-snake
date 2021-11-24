@@ -1,5 +1,5 @@
-const POSITION_CHECK_ENABLED = false;
-const BORDERS_CHECK_ENABLED = false;
+let POSITION_CHECK_ENABLED = true;
+let BORDERS_CHECK_ENABLED = true;
 const FIELD_SIZE = {
   cols: 51,
   rows: 51
@@ -100,25 +100,42 @@ class Config {
   }
 
   render() {
-    const createInput = () => {
+    const createNumberInput = () => {
       const input = document.createElement('input');
       input.className = 'config-input';
-      // input.type = 'number';
 
       return input;
     }
-    const rowsInput = createInput();
+    const createBooleanInput = () => {
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+
+      return input;
+    }
+
+    const rowsInput = createNumberInput();
     rowsInput.value = FIELD_SIZE.rows;
     this.addInputListener(rowsInput, value => FIELD_SIZE.rows = value);
-    const colsInput = createInput();
+
+    const colsInput = createNumberInput();
     colsInput.value = FIELD_SIZE.cols;
     this.addInputListener(colsInput, value => FIELD_SIZE.cols = value);
-    const stepTimeInput = createInput();
+
+    const stepTimeInput = createNumberInput();
     stepTimeInput.value = STEP_TIME;
     this.addInputListener(stepTimeInput, value => STEP_TIME = value);
-    const snakeLengthInput = createInput();
+
+    const snakeLengthInput = createNumberInput();
     snakeLengthInput.value = SNAKE_LENGTH;
     this.addInputListener(snakeLengthInput, value => SNAKE_LENGTH = value);
+
+    const positionCheckInput = createBooleanInput();
+    positionCheckInput.checked = POSITION_CHECK_ENABLED;
+    positionCheckInput.addEventListener('input', e => POSITION_CHECK_ENABLED = e.target.checked);
+
+    const bordersCheckInput = createBooleanInput();
+    bordersCheckInput.checked = BORDERS_CHECK_ENABLED;
+    bordersCheckInput.addEventListener('input', e => BORDERS_CHECK_ENABLED = e.target.checked);
 
     this.container.innerHTML = `
       <h3>Config</h3>
@@ -127,6 +144,8 @@ class Config {
       </div>
       <div><b>Step time: </b></div>
       <div><b>Snake length: </b></div>
+      <div><b>Position check: </b></div>
+      <div><b>Borders check: </b></div>
       <button onclick="initialize()">restart</button>
     `;
 
@@ -135,6 +154,8 @@ class Config {
     this.container.children[1].appendChild(colsInput);
     this.container.children[2].appendChild(stepTimeInput);
     this.container.children[3].appendChild(snakeLengthInput);
+    this.container.children[4].appendChild(positionCheckInput);
+    this.container.children[5].appendChild(bordersCheckInput);
   }
 }
 
@@ -176,6 +197,8 @@ const initialize = (isClearLog = true) => {
     START_POSITION: { ...START_POSITION },
     STEP_TIME,
     SNAKE_LENGTH,
+    POSITION_CHECK_ENABLED,
+    BORDERS_CHECK_ENABLED,
   };
 
   currentPosition = renderParams.START_POSITION;
@@ -209,7 +232,7 @@ const initialize = (isClearLog = true) => {
 const generateRandom = (min, max) => Math.round(Math.random() * (max - min) + min);
 
 const calculateNextPosition = ({ x: curX, y: curY }) => {
-  const possiblePositions = (BORDERS_CHECK_ENABLED ? [
+  const possiblePositions = (renderParams.BORDERS_CHECK_ENABLED ? [
     { x: curX + 1, y: curY },
     { x: curX - 1, y: curY },
     { x: curX, y: curY + 1 },
@@ -218,9 +241,8 @@ const calculateNextPosition = ({ x: curX, y: curY }) => {
     { x: (curX + 1) % renderParams.FIELD_SIZE.cols, y: curY },
     { x: curX === 0 ? renderParams.FIELD_SIZE.cols - 1 : curX - 1, y: curY },
     { x: curX, y: (curY + 1) % renderParams.FIELD_SIZE.rows },
-    { x: curX, y: curY === 0 ? renderParams.FIELD_SIZE.rows - 1 : curY - 1 },
   ]).filter(({ x, y }) =>
-    (!POSITION_CHECK_ENABLED || !positionsLog.checkPosition({ x, y }))
+    (!renderParams.POSITION_CHECK_ENABLED || !positionsLog.checkPosition({ x, y }))
     && x > -1 && y > -1
     && x < renderParams.FIELD_SIZE.cols && y < renderParams.FIELD_SIZE.rows
   );
