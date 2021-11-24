@@ -1,4 +1,5 @@
 const POSITION_CHECK_ENABLED = false;
+const BORDERS_CHECK_ENABLED = false;
 const FIELD_SIZE = {
   cols: 51,
   rows: 51
@@ -208,12 +209,17 @@ const initialize = (isClearLog = true) => {
 const generateRandom = (min, max) => Math.round(Math.random() * (max - min) + min);
 
 const calculateNextPosition = ({ x: curX, y: curY }) => {
-  const possiblePositions = [
+  const possiblePositions = (BORDERS_CHECK_ENABLED ? [
     { x: curX + 1, y: curY },
     { x: curX - 1, y: curY },
     { x: curX, y: curY + 1 },
     { x: curX, y: curY - 1 },
-  ].filter(({ x, y }) =>
+  ] : [
+    { x: (curX + 1) % renderParams.FIELD_SIZE.cols, y: curY },
+    { x: curX === 0 ? renderParams.FIELD_SIZE.cols - 1 : curX - 1, y: curY },
+    { x: curX, y: (curY + 1) % renderParams.FIELD_SIZE.rows },
+    { x: curX, y: curY === 0 ? renderParams.FIELD_SIZE.rows - 1 : curY - 1 },
+  ]).filter(({ x, y }) =>
     (!POSITION_CHECK_ENABLED || !positionsLog.checkPosition({ x, y }))
     && x > -1 && y > -1
     && x < renderParams.FIELD_SIZE.cols && y < renderParams.FIELD_SIZE.rows
