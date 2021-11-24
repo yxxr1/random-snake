@@ -87,14 +87,15 @@ class Config {
     this.container = container;
   }
 
-  addInputListener(input, handler) {
-    input.addEventListener('input', e => {
+  addInputListener(input, handler, onValidationFailed) {
+    input.addEventListener('change', e => {
       const { value } = e.target;
+      const numberValue = +value;
 
-      if (/^[0-9]+$/.test(value)) {
-        handler(+value);
+      if (numberValue && numberValue > 0) {
+        handler(numberValue);
       } else {
-        e.target.value = value.replaceAll(/[^0-9]/g, '');
+        onValidationFailed(e);
       }
     });
   }
@@ -115,19 +116,39 @@ class Config {
 
     const rowsInput = createNumberInput();
     rowsInput.value = FIELD_SIZE.rows;
-    this.addInputListener(rowsInput, value => FIELD_SIZE.rows = value);
+    this.addInputListener(rowsInput, value => {
+      FIELD_SIZE.rows = value;
+
+      if (START_POSITION.y >= value) {
+        START_POSITION.y = value - 1;
+      }
+    }, e => e.target.value = FIELD_SIZE.rows);
 
     const colsInput = createNumberInput();
     colsInput.value = FIELD_SIZE.cols;
-    this.addInputListener(colsInput, value => FIELD_SIZE.cols = value);
+    this.addInputListener(colsInput, value => {
+      FIELD_SIZE.cols = value;
+
+      if (START_POSITION.x >= value) {
+        START_POSITION.x = value - 1;
+      }
+    }, e => e.target.value = FIELD_SIZE.cols);
 
     const stepTimeInput = createNumberInput();
     stepTimeInput.value = STEP_TIME;
-    this.addInputListener(stepTimeInput, value => STEP_TIME = value);
+    this.addInputListener(
+      stepTimeInput,
+      value => STEP_TIME = value,
+      e => e.target.value = STEP_TIME,
+    );
 
     const snakeLengthInput = createNumberInput();
     snakeLengthInput.value = SNAKE_LENGTH;
-    this.addInputListener(snakeLengthInput, value => SNAKE_LENGTH = value);
+    this.addInputListener(
+      snakeLengthInput,
+      value => SNAKE_LENGTH = value,
+      e => e.target.value = SNAKE_LENGTH,
+    );
 
     const positionCheckInput = createBooleanInput();
     positionCheckInput.checked = POSITION_CHECK_ENABLED;
@@ -241,10 +262,11 @@ const calculateNextPosition = ({ x: curX, y: curY }) => {
     { x: (curX + 1) % renderParams.FIELD_SIZE.cols, y: curY },
     { x: curX === 0 ? renderParams.FIELD_SIZE.cols - 1 : curX - 1, y: curY },
     { x: curX, y: (curY + 1) % renderParams.FIELD_SIZE.rows },
+    { x: curX, y: curY === 0 ? renderParams.FIELD_SIZE.rows - 1 : curY - 1 },
   ]).filter(({ x, y }) =>
-    (!renderParams.POSITION_CHECK_ENABLED || !positionsLog.checkPosition({ x, y }))
-    && x > -1 && y > -1
+    x > -1 && y > -1
     && x < renderParams.FIELD_SIZE.cols && y < renderParams.FIELD_SIZE.rows
+    && (!renderParams.POSITION_CHECK_ENABLED || !positionsLog.checkPosition({ x, y }))
   );
 
   if (!possiblePositions.length) {
