@@ -10,6 +10,7 @@
 #info {
     display: flex;
     margin-top: 10px;
+    max-width: 800px;
 }
 #info > * {
     width: 50%;
