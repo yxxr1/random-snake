@@ -88,12 +88,17 @@ class Config {
     this.container = container;
   }
 
-  addInputListener(input, handler, onValidationFailed) {
+  addNumberInputListener(
+    input,
+    handler,
+    onValidationFailed,
+    validator = value => value > 0,
+  ) {
     input.addEventListener('change', e => {
       const { value } = e.target;
       const numberValue = +value;
 
-      if (numberValue && numberValue > 0) {
+      if (!isNaN(numberValue) && validator(value)) {
         handler(numberValue);
       } else {
         onValidationFailed(e);
@@ -101,69 +106,86 @@ class Config {
     });
   }
 
+  createNumberInput() {
+    const input = document.createElement('input');
+    input.className = 'config-input';
+
+    return input;
+  }
+  createBooleanInput() {
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+
+    return input;
+  }
+
   render() {
-    const createNumberInput = () => {
-      const input = document.createElement('input');
-      input.className = 'config-input';
-
-      return input;
-    }
-    const createBooleanInput = () => {
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-
-      return input;
-    }
-
-    const rowsInput = createNumberInput();
-    rowsInput.value = FIELD_SIZE.rows;
-    this.addInputListener(rowsInput, value => {
-      FIELD_SIZE.rows = value;
-
-      if (START_POSITION.y >= value) {
-        START_POSITION.y = value - 1;
-      }
-    }, e => e.target.value = FIELD_SIZE.rows);
-
-    const colsInput = createNumberInput();
+    const colsInput = this.createNumberInput();
     colsInput.value = FIELD_SIZE.cols;
-    this.addInputListener(colsInput, value => {
+    this.addNumberInputListener(colsInput, value => {
       FIELD_SIZE.cols = value;
 
       if (START_POSITION.x >= value) {
-        START_POSITION.x = value - 1;
+        START_POSITION.x = startXInput.value = value - 1;
       }
     }, e => e.target.value = FIELD_SIZE.cols);
 
-    const stepTimeInput = createNumberInput();
+    const rowsInput = this.createNumberInput();
+    rowsInput.value = FIELD_SIZE.rows;
+    this.addNumberInputListener(rowsInput, value => {
+      FIELD_SIZE.rows = value;
+
+      if (START_POSITION.y >= value) {
+        START_POSITION.y = startYInput.value = value - 1;
+      }
+    }, e => e.target.value = FIELD_SIZE.rows);
+
+    const startXInput = this.createNumberInput();
+    startXInput.value = START_POSITION.x;
+    this.addNumberInputListener(
+      startXInput,
+      value => START_POSITION.x = value,
+      e => e.target.value = START_POSITION.x,
+      value => value >= 0 && value <FIELD_SIZE.cols,
+    );
+
+    const startYInput = this.createNumberInput();
+    startYInput.value = START_POSITION.y;
+    this.addNumberInputListener(
+      startYInput,
+      value => START_POSITION.y = value,
+      e => e.target.value = START_POSITION.y,
+      value => value >= 0 && value <FIELD_SIZE.rows,
+    );
+
+    const stepTimeInput = this.createNumberInput();
     stepTimeInput.value = STEP_TIME;
-    this.addInputListener(
+    this.addNumberInputListener(
       stepTimeInput,
       value => STEP_TIME = value,
       e => e.target.value = STEP_TIME,
     );
 
-    const snakeLengthInput = createNumberInput();
+    const snakeLengthInput = this.createNumberInput();
     snakeLengthInput.value = SNAKE_LENGTH;
-    this.addInputListener(
+    this.addNumberInputListener(
       snakeLengthInput,
       value => SNAKE_LENGTH = value,
       e => e.target.value = SNAKE_LENGTH,
     );
 
-    const positionCheckInput = createBooleanInput();
+    const positionCheckInput = this.createBooleanInput();
     positionCheckInput.checked = POSITION_CHECK_ENABLED;
     positionCheckInput.addEventListener('input', e => POSITION_CHECK_ENABLED = e.target.checked);
 
-    const bordersCheckInput = createBooleanInput();
+    const bordersCheckInput = this.createBooleanInput();
     bordersCheckInput.checked = BORDERS_CHECK_ENABLED;
     bordersCheckInput.addEventListener('input', e => BORDERS_CHECK_ENABLED = e.target.checked);
 
     this.container.innerHTML = `
       <h3>Config</h3>
-      <div>
-        <b>Field size: </b>
-      </div>
+      <div><b>Field size: </b></div>
+      <div><b>Start position: </b></div>
       <div><b>Step time: </b></div>
       <div><b>Snake length: </b></div>
       <div><b>Position check: </b></div>
@@ -171,13 +193,16 @@ class Config {
       <button onclick="initialize()">restart</button>
     `;
 
-    this.container.children[1].appendChild(rowsInput);
-    this.container.children[1].appendChild(document.createTextNode('×'));
     this.container.children[1].appendChild(colsInput);
-    this.container.children[2].appendChild(stepTimeInput);
-    this.container.children[3].appendChild(snakeLengthInput);
-    this.container.children[4].appendChild(positionCheckInput);
-    this.container.children[5].appendChild(bordersCheckInput);
+    this.container.children[1].appendChild(document.createTextNode('×'));
+    this.container.children[1].appendChild(rowsInput);
+    this.container.children[2].appendChild(startXInput);
+    this.container.children[2].appendChild(document.createTextNode('×'));
+    this.container.children[2].appendChild(startYInput);
+    this.container.children[3].appendChild(stepTimeInput);
+    this.container.children[4].appendChild(snakeLengthInput);
+    this.container.children[5].appendChild(positionCheckInput);
+    this.container.children[6].appendChild(bordersCheckInput);
   }
 }
 
