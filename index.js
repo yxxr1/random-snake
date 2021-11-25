@@ -1,5 +1,6 @@
 let POSITION_CHECK_ENABLED = true;
 let BORDERS_CHECK_ENABLED = true;
+const CELL_SIZE = 16;
 const FIELD_SIZE = {
   cols: 51,
   rows: 51
@@ -304,4 +305,33 @@ const render = () => {
 window.addEventListener('DOMContentLoaded', () => {
   initialize();
   window.requestAnimationFrame(render);
+
+  container.addEventListener('dblclick', () => {
+    if (window.document.fullscreenElement === null) {
+      const oldFieldSize = { ...FIELD_SIZE };
+
+      FIELD_SIZE.rows = Math.ceil(window.screen.height / CELL_SIZE);
+      FIELD_SIZE.cols = Math.ceil(window.screen.width / CELL_SIZE);
+
+      initialize(false);
+
+      container.classList.toggle('fullscreen');
+
+      container.requestFullscreen();
+
+      const watchFullScreenExit = () => {
+        if (window.document.fullscreenElement !== container) {
+          FIELD_SIZE.rows = oldFieldSize.rows;
+          FIELD_SIZE.cols = oldFieldSize.cols;
+
+          initialize(false);
+
+          container.removeEventListener('fullscreenchange', watchFullScreenExit);
+        }
+      }
+      container.addEventListener('fullscreenchange', watchFullScreenExit);
+    } else {
+      document.exitFullscreen();
+    }
+  });
 });
